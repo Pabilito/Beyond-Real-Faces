@@ -1,3 +1,8 @@
+# Other ignores
+Dataset/*
+Ignore/*
+Models/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
