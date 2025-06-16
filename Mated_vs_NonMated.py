@@ -9,6 +9,11 @@ from torchvision import transforms
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from scipy import stats
+
+# Samples
+NON_MATED_COMPARISONS = 50
+MATED_COMPARISONS_PER_IDENTITY = 5
 
 # Device configuration
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -19,7 +24,7 @@ MODEL_NAME = "ArcFace_R100_MS1MV3.pth"
 weights = os.path.join(FOLDER_PATH, MODEL_NAME)
 
 # Dataset configuration
-DATASET_PATH = "Dataset"
+DATASET_PATH = "Dataset2"
 
 # Load and configure model
 model = iresnet.iresnet100()
@@ -217,6 +222,66 @@ def compute_non_mated_scores(valid_identities, max_comparisons=10000):
     print(f"Total non-mated comparisons: {len(non_mated_scores)}")
     return non_mated_scores
 
+def create_similarity_distribution_plot(mated_scores, non_mated_scores):
+    """Create a beautiful distribution plot similar to the reference image"""
+    # Set up the plot style
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+    
+    '''
+    # Create the distribution plots with filled areas
+    # Non-mated scores (orange/red)
+    ax.hist(non_mated_scores, bins=50, alpha=0.7, density=True, 
+            color='#ff7f0e', label='Non-mated scores', edgecolor='white', linewidth=0.5)
+    
+    # Mated scores (blue)
+    ax.hist(mated_scores, bins=50, alpha=0.7, density=True, 
+            color='#1f77b4', label='Mated scores', edgecolor='white', linewidth=0.5)
+    '''
+    
+    # Create x-axis for smooth curves
+    x_min = min(min(mated_scores), min(non_mated_scores)) - 0.1
+    x_max = max(max(mated_scores), max(non_mated_scores)) + 0.1
+    x = np.linspace(x_min, x_max, 200)
+    
+    # Kernel density estimation
+    try:
+        non_mated_kde = stats.gaussian_kde(non_mated_scores)
+        mated_kde = stats.gaussian_kde(mated_scores)
+        
+        # Plot smooth curves on top
+        ax.plot(x, non_mated_kde(x), color='#d62728', linewidth=2, alpha=0.8)
+        ax.plot(x, mated_kde(x), color='#1f77b4', linewidth=2, alpha=0.8)
+    except:
+        print("Could not create KDE curves")
+    
+    # Customize the plot
+    ax.set_xlabel('Cosine Similarity Score', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Density', fontsize=12, fontweight='bold')
+    ax.set_title('Mated vs non-mated similarity scores', fontsize=14, fontweight='bold', pad=20)
+    
+    # Set axis limits
+    ax.set_xlim(x_min, x_max)
+    
+    # Customize legend
+    ax.legend(frameon=True, fancybox=True, shadow=True, fontsize=11, loc='upper left')
+    
+    # Grid styling
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_facecolor('white')
+    
+    # Spines styling
+    for spine in ax.spines.values():
+        spine.set_color('gray')
+        spine.set_linewidth(0.5)
+    
+    plt.tight_layout()
+    
+    # Save the plot
+    plt.savefig('similarity_distribution.png', dpi=300, bbox_inches='tight', 
+                facecolor='white', edgecolor='none')
+    plt.show()
+
 def analyze_and_plot_results(mated_scores, non_mated_scores):
     """Analyze and visualize the similarity scores"""
     print("\n=== SIMILARITY ANALYSIS RESULTS ===")
@@ -236,29 +301,24 @@ def analyze_and_plot_results(mated_scores, non_mated_scores):
     print(f"  Min: {np.min(non_mated_scores):.4f}")
     print(f"  Max: {np.max(non_mated_scores):.4f}")
     
-    # Plot distributions
-    plt.figure(figsize=(15, 5))
+    # Create the main similarity distribution plot
+    create_similarity_distribution_plot(mated_scores, non_mated_scores)
     
-    # Histogram
-    plt.subplot(1, 3, 1)
-    plt.hist(mated_scores, bins=50, alpha=0.7, label='Mated', color='green', density=True)
-    plt.hist(non_mated_scores, bins=50, alpha=0.7, label='Non-Mated', color='red', density=True)
-    plt.xlabel('Cosine Similarity Score')
-    plt.ylabel('Density')
-    plt.title('Distribution of Similarity Scores')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    # Create additional analysis plots
+    plt.figure(figsize=(10, 5))
     
     # Box plot
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 2, 1)
     data_to_plot = [mated_scores, non_mated_scores]
-    plt.boxplot(data_to_plot, labels=['Mated', 'Non-Mated'])
+    box_plot = plt.boxplot(data_to_plot, labels=['Mated', 'Non-Mated'], patch_artist=True)
+    box_plot['boxes'][0].set_facecolor('#1f77b4')
+    box_plot['boxes'][1].set_facecolor('#ff7f0e')
     plt.ylabel('Cosine Similarity Score')
     plt.title('Box Plot of Similarity Scores')
     plt.grid(True, alpha=0.3)
     
     # ROC-like analysis
-    plt.subplot(1, 3, 3)
+    plt.subplot(1, 2, 2)
     thresholds = np.linspace(min(min(mated_scores), min(non_mated_scores)), 
                            max(max(mated_scores), max(non_mated_scores)), 100)
     
@@ -274,16 +334,13 @@ def analyze_and_plot_results(mated_scores, non_mated_scores):
         far_rates.append(far)
         frr_rates.append(frr)
     
-    plt.plot(thresholds, far_rates, label='FAR (False Accept Rate)', color='red')
-    plt.plot(thresholds, frr_rates, label='FRR (False Reject Rate)', color='blue')
+    plt.plot(thresholds, far_rates, label='FAR (False Accept Rate)', color='red', linewidth=2)
+    plt.plot(thresholds, frr_rates, label='FRR (False Reject Rate)', color='blue', linewidth=2)
     plt.xlabel('Threshold')
     plt.ylabel('Error Rate')
     plt.title('FAR and FRR vs Threshold')
     plt.legend()
     plt.grid(True, alpha=0.3)
-    
-    plt.tight_layout()
-    plt.show()
     
     # Find EER (Equal Error Rate)
     eer_idx = np.argmin(np.abs(np.array(far_rates) - np.array(frr_rates)))
@@ -344,6 +401,8 @@ def save_results(mated_scores, non_mated_scores, results_summary):
     print("- mated_scores.txt")
     print("- non_mated_scores.txt") 
     print("- similarity_analysis_summary.txt")
+    print("- similarity_distribution.png")
+    print("- additional_analysis.png")
 
 def main():
     """Main execution function"""
@@ -365,10 +424,10 @@ def main():
         return
     
     # Step 3: Compute mated similarity scores (features extracted on-demand)
-    mated_scores = compute_mated_scores(valid_identities, max_pairs_per_identity=10)
+    mated_scores = compute_mated_scores(valid_identities, max_pairs_per_identity=MATED_COMPARISONS_PER_IDENTITY)
     
     # Step 4: Compute non-mated similarity scores (features extracted on-demand)
-    non_mated_scores = compute_non_mated_scores(valid_identities, max_comparisons=10000)
+    non_mated_scores = compute_non_mated_scores(valid_identities, max_comparisons=NON_MATED_COMPARISONS)
     
     if not mated_scores or not non_mated_scores:
         print("Failed to compute similarity scores!")
