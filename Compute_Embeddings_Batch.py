@@ -1,3 +1,12 @@
+"""
+To be run with:
+* parallelize.sh
+* main_runner.sh
+
+Usage:
+./main_runner.sh
+"""
+
 import torch
 import torch.nn.functional as F
 import os
@@ -16,10 +25,6 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 FOLDER_PATH = "Models"
 MODEL_NAME = "ArcFace_R100_MS1MV3.pth"
 weights = os.path.join(FOLDER_PATH, MODEL_NAME)
-
-# Dataset configuration
-DATASET_PATH = "Dataset"
-OUTPUT_JSON = "embeddings.json"
 
 # Load and configure model
 model = iresnet.iresnet100()
@@ -60,15 +65,11 @@ def get_embedding(image_tensor):
         print(f"Error extracting features: {e}")
         return None
 
-def process_dataset(dataset_path):
+def process_dataset(dataset_path, output_path):
     """Process dataset and write embeddings incrementally to JSON"""
     if not os.path.exists(dataset_path):
         print(f"Dataset path {dataset_path} does not exist!")
         return
-
-    # Clear the output file if it exists
-    with open(OUTPUT_JSON, 'w') as f:
-        pass
 
     for identity_folder in os.listdir(dataset_path):
         identity_path = os.path.join(dataset_path, identity_folder)
@@ -91,7 +92,7 @@ def process_dataset(dataset_path):
                         }
 
                         try:
-                            with open(OUTPUT_JSON, 'a') as f:
+                            with open(output_path, 'a') as f:
                                 f.write(json.dumps(entry) + '\n')
                         except Exception as e:
                             print(f"Error writing {file} to JSON: {e}")
@@ -100,16 +101,16 @@ def process_dataset(dataset_path):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python Compute_Embeddings_Batch.py <dataset_path> <output_path>")
+    if len(sys.argv) != 3:
+        print("Usage: python Compute_Embeddings_Batch.py <dataset_path>")
         sys.exit(1)
 
     #For batch processing
-    specific_path = sys.argv[1]
-    OUTPUT_JSON = f"{specific_path}.json"
+    extract_dir = sys.argv[1]
+    out_path = os.path.join(sys.argv[2], f"{extract_dir}.json")
 
     print("Starting dataset processing...")
-    process_dataset(os.path.join(DATASET_PATH, specific_path))
+    process_dataset(extract_dir, out_path)
 
 if __name__ == "__main__":
     main()
