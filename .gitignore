@@ -2,6 +2,8 @@
 Dataset*/*
 Ignore/*
 Models/*
+Embeddings/*
+Figures/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
