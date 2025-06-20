@@ -127,11 +127,12 @@ def main(sample_non_mated=100, max_identities=100):
     plt.figure(figsize=(12,7))
     sns.kdeplot(all_mated_similarities, label="Mated (same identity)", fill=True, alpha=0.5)
     sns.kdeplot(all_non_mated_similarities, label="Non-mated (different identity)", fill=True, alpha=0.5)
-    plt.title(f"Aggregated Cosine Similarity Distribution (Sampled {len(sampled_identities)} identities)")
+    plt.title(f"Cosine Similarity Distribution (Sampled {len(sampled_identities)} identities)")
     plt.xlabel("Cosine Similarity")
     plt.ylabel("Density")
     plt.legend()
-    plt.show()
+    plt.savefig("MatedVsNonmated.png")
+    plt.close()
 
 if __name__ == "__main__":
     main()
