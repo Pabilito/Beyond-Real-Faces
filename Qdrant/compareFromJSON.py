@@ -5,6 +5,8 @@ import random
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict
 import seaborn as sns
+import os
+import argparse
 
 def load_embeddings(json_file_path):
 
@@ -24,34 +26,47 @@ def load_embeddings(json_file_path):
     
     return identity_groups
 
-def compute_mated_similarities(identity_groups, n_identities=None):
+def compute_limited_mated_similarities(identity_groups, n_comparisons=1000):
 
     mated_similarities = []
     identities = list(identity_groups.keys())
     
-    if n_identities:
-        identities = identities[:n_identities]
-    
+    # Generate all possible mated pairs
+    all_mated_pairs = []
     for identity in identities:
         embeddings_list = identity_groups[identity]
         
-        # Compute all pairwise similarities within the same identity
+        # Generate all pairwise combinations within the same identity
         for i in range(len(embeddings_list)):
             for j in range(i + 1, len(embeddings_list)):
-                emb1 = embeddings_list[i]['embedding'].reshape(1, -1)
-                emb2 = embeddings_list[j]['embedding'].reshape(1, -1)
-                similarity = cosine_similarity(emb1, emb2)[0][0]
-                mated_similarities.append(similarity)
+                all_mated_pairs.append({
+                    'identity': identity,
+                    'emb1': embeddings_list[i]['embedding'],
+                    'emb2': embeddings_list[j]['embedding']
+                })
+    
+    print(f"Total possible mated pairs: {len(all_mated_pairs)}")
+    
+    # Randomly sample n_comparisons pairs
+    if len(all_mated_pairs) > n_comparisons:
+        selected_pairs = random.sample(all_mated_pairs, n_comparisons)
+    else:
+        selected_pairs = all_mated_pairs
+        print(f"Warning: Only {len(all_mated_pairs)} mated pairs available, using all of them")
+    
+    # Compute similarities for selected pairs
+    for pair in selected_pairs:
+        emb1 = pair['emb1'].reshape(1, -1)
+        emb2 = pair['emb2'].reshape(1, -1)
+        similarity = cosine_similarity(emb1, emb2)[0][0]
+        mated_similarities.append(similarity)
     
     return mated_similarities
 
-def compute_non_mated_similarities(identity_groups, n_identities=None, n_comparisons=100):
+def compute_limited_non_mated_similarities(identity_groups, n_comparisons=1000):
 
     non_mated_similarities = []
     identities = list(identity_groups.keys())
-    
-    if n_identities:
-        identities = identities[:n_identities]
     
     # Create a flat list of all embeddings with their identity labels
     all_embeddings = []
@@ -88,8 +103,7 @@ def compute_non_mated_similarities(identity_groups, n_identities=None, n_compari
     
     return non_mated_similarities
 
-def plot_similarity_distributions(mated_sims, non_mated_sims, n_identities, filename):
-    """Create KDE plot comparing mated vs non-mated similarity distributions."""
+def plot_similarity_distributions(mated_sims, non_mated_sims, n_comparisons, filename):
     
     # Check if we have data to plot
     if len(mated_sims) == 0:
@@ -101,45 +115,38 @@ def plot_similarity_distributions(mated_sims, non_mated_sims, n_identities, file
     
     # Create the plot
     plt.figure(figsize=(12, 7))
-    sns.kdeplot(mated_sims, label="Mated (same identity)", fill=True, alpha=0.5)
-    sns.kdeplot(non_mated_sims, label="Non-mated (different identity)", fill=True, alpha=0.5)
-    plt.title(f"Cosine Similarity Distribution (Sampled {n_identities} identities)")
+    sns.kdeplot(mated_sims, label="Mated", fill=True, alpha=0.5)
+    sns.kdeplot(non_mated_sims, label="Non-mated", fill=True, alpha=0.5)
+    plt.title(f"Cosine Similarity Distribution ({len(mated_sims)} mated, {len(non_mated_sims)} non-mated comparisons)")
     plt.xlabel("Cosine Similarity")
     plt.ylabel("Density")
     plt.legend()
     
     # Generate output filename based on input filename
     base_name = filename.split('.')[0]  # Remove extension
-    output_filename = f"{base_name}_MatedVsNonmated.png"
+    output_filename = f"{base_name}_MatedVsNonmated_{n_comparisons}.png"
     
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
     print(f"Plot saved as: {output_filename}")
-    plt.show()
     
     return output_filename
 
-def main(json_file_path, n_identities=None, n_non_mated_comparisons=100):
+def main(json_file_path, n_comparisons=1000):
 
     print("Loading embeddings...")
     identity_groups = load_embeddings(json_file_path)
     
     print(f"Loaded {len(identity_groups)} identities")
     
-    # Determine actual number of identities to use
-    actual_n_identities = n_identities if n_identities else len(identity_groups)
-    if n_identities and n_identities > len(identity_groups):
-        actual_n_identities = len(identity_groups)
-        print(f"Requested {n_identities} identities, but only {len(identity_groups)} available")
+    # Count total samples
+    total_samples = sum(len(embs) for embs in identity_groups.values())
+    print(f"Total samples: {total_samples}")
     
-    print(f"Using {actual_n_identities} identities for analysis")
+    print(f"Computing {n_comparisons} mated similarities...")
+    mated_similarities = compute_limited_mated_similarities(identity_groups, n_comparisons)
     
-    print("Computing mated similarities...")
-    mated_similarities = compute_mated_similarities(identity_groups, n_identities)
-    
-    print("Computing non-mated similarities...")
-    non_mated_similarities = compute_non_mated_similarities(
-        identity_groups, n_identities, n_non_mated_comparisons
-    )
+    print(f"Computing {n_comparisons} non-mated similarities...")
+    non_mated_similarities = compute_limited_non_mated_similarities(identity_groups, n_comparisons)
     
     print(f"Generated {len(mated_similarities)} mated comparisons")
     print(f"Generated {len(non_mated_similarities)} non-mated comparisons")
@@ -155,20 +162,23 @@ def main(json_file_path, n_identities=None, n_non_mated_comparisons=100):
     
     # Create visualization
     print("Creating visualization...")
-    import os
-    filename = os.path.basename(json_file_path) + str(n_identities)
+    filename = os.path.basename(json_file_path)
     filename = os.path.join("Figures", filename)
-    plot_similarity_distributions(mated_similarities, non_mated_similarities, actual_n_identities, filename)
+    
+    # Create Figures directory if it doesn't exist
+    os.makedirs("Figures", exist_ok=True)
+    
+    plot_similarity_distributions(mated_similarities, non_mated_similarities, n_comparisons, filename)
     
     return mated_similarities, non_mated_similarities, identity_groups
 
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Compute mated and non-mated similarity scores.")
+    parser.add_argument("json_file_path", type=str, help="Path to the input JSON file.")
+    parser.add_argument("--n_comparisons", type=int, default=10000, help="Number of comparisons to compute (default: 10000)")
+    args = parser.parse_args()
 
-    json_file_path = "Embeddings/Syn-Multi-PIE.json"
-    
     mated_sims, non_mated_sims, groups = main(
-        json_file_path, 
-        n_identities=10,
-        n_non_mated_comparisons=100
+        args.json_file_path,
+        n_comparisons=args.n_comparisons
     )
