@@ -4,6 +4,7 @@ Ignore/*
 Models/*
 Embeddings/*
 Figures/*
+HSFaces/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
