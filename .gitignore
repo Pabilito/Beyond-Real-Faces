@@ -5,6 +5,7 @@ Models/*
 Embeddings/*
 Figures/*
 HSFaces/*
+Qdrant/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

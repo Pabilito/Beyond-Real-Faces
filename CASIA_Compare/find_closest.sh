@@ -6,5 +6,5 @@ for file in "$input_folder"/*.json; do
     echo "Processing: $file"
     # Count number of lines in the JSON file
     n_comparisons=$(wc -l < "$file")
-    python compare_embeddings.py "$file" --n_comparisons "$n_comparisons" --casia_file "$input_folder"/CASIA.json
+    python find_closest.py "$file" --n_comparisons "$n_comparisons" --casia_file "$input_folder"/CASIA.json
 done
