@@ -6,6 +6,7 @@ Embeddings/*
 Figures/*
 HSFaces/*
 Qdrant/*
+Embedding_Computation/NOT_GIT/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
