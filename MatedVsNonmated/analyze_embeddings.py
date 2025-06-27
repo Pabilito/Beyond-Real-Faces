@@ -1,123 +1,184 @@
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import argparse
-from sklearn.metrics.pairwise import cosine_similarity
 import random
+from sklearn.metrics.pairwise import cosine_similarity
+from collections import defaultdict
+import seaborn as sns
 import os
-from pathlib import Path
+import argparse
 
-def load_embeddings(json_file):
-    """Load embeddings from JSON file line by line"""
-    embeddings = []
-    identities = []
-    image_names = []
-    
-    with open(json_file, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if line:  # Skip empty lines
-                try:
-                    entry = json.loads(line)
-                    embeddings.append(entry['embedding'])
-                    identities.append(entry['identity'])
-                    image_names.append(entry['image_name'])
-                except json.JSONDecodeError:
-                    continue  # Skip malformed lines
-    
-    return np.array(embeddings), identities, image_names
+def load_embeddings(json_file_path):
 
-def find_best_matches(input_embeddings, casia_embeddings, n_samples):
-    """Find the closest embedding in CASIA for n random samples from input"""
+    with open(json_file_path, 'r') as f:
+        data = [json.loads(line) for line in f]
     
-    # Randomly sample from input embeddings
-    if len(input_embeddings) < n_samples:
-        sample_indices = list(range(len(input_embeddings)))
-        print(f"Warning: Only {len(input_embeddings)} embeddings available, using all of them")
+    # Group embeddings by identity
+    identity_groups = defaultdict(list)
+    for item in data:
+        identity = item['identity']
+        embedding = np.array(item['embedding'])
+        identity_groups[identity].append({
+            'embedding': embedding,
+            'image_name': item['image_name'],
+            'original_data': item
+        })
+    
+    return identity_groups
+
+def compute_limited_mated_similarities(identity_groups, n_comparisons=1000):
+
+    mated_similarities = []
+    identities = list(identity_groups.keys())
+    
+    # Generate all possible mated pairs
+    all_mated_pairs = []
+    for identity in identities:
+        embeddings_list = identity_groups[identity]
+        
+        # Generate all pairwise combinations within the same identity
+        for i in range(len(embeddings_list)):
+            for j in range(i + 1, len(embeddings_list)):
+                all_mated_pairs.append({
+                    'identity': identity,
+                    'emb1': embeddings_list[i]['embedding'],
+                    'emb2': embeddings_list[j]['embedding']
+                })
+    
+    print(f"Total possible mated pairs: {len(all_mated_pairs)}")
+    
+    # Randomly sample n_comparisons pairs
+    if len(all_mated_pairs) > n_comparisons:
+        selected_pairs = random.sample(all_mated_pairs, n_comparisons)
     else:
-        sample_indices = random.sample(range(len(input_embeddings)), n_samples)
+        selected_pairs = all_mated_pairs
+        print(f"Warning: Only {len(all_mated_pairs)} mated pairs available, using all of them")
     
-    best_similarities = []
+    # Compute similarities for selected pairs
+    for pair in selected_pairs:
+        emb1 = pair['emb1'].reshape(1, -1)
+        emb2 = pair['emb2'].reshape(1, -1)
+        similarity = cosine_similarity(emb1, emb2)[0][0]
+        mated_similarities.append(similarity)
     
-    print(f"Finding best matches for {len(sample_indices)} samples...")
-    
-    for i, sample_idx in enumerate(sample_indices):
-        if (i + 1) % 1000 == 0:
-            print(f"  Processed {i + 1}/{len(sample_indices)} samples")
-        
-        # Get the sample embedding
-        sample_embedding = input_embeddings[sample_idx:sample_idx+1]
-        
-        # Compute similarities with all CASIA embeddings
-        similarities = cosine_similarity(sample_embedding, casia_embeddings)[0]
-        
-        # Find the best (maximum) similarity
-        best_sim = np.max(similarities)
-        best_similarities.append(best_sim)
-    
-    return best_similarities
+    return mated_similarities
 
-def create_similarity_plot(best_similarities, filename, n_comparisons):
-    """Create and save the similarity distribution plot"""
+def compute_limited_non_mated_similarities(identity_groups, n_comparisons=1000):
+
+    non_mated_similarities = []
+    identities = list(identity_groups.keys())
+    
+    # Create a flat list of all embeddings with their identity labels
+    all_embeddings = []
+    for identity in identities:
+        for emb_data in identity_groups[identity]:
+            all_embeddings.append({
+                'embedding': emb_data['embedding'],
+                'identity': identity
+            })
+    
+    # Generate random non-mated pairs
+    comparisons_made = 0
+    attempts = 0
+    max_attempts = n_comparisons * 10  # Prevent infinite loop
+    
+    while comparisons_made < n_comparisons and attempts < max_attempts:
+        attempts += 1
+        
+        # Randomly select two embeddings
+        idx1, idx2 = random.sample(range(len(all_embeddings)), 2)
+        emb1_data = all_embeddings[idx1]
+        emb2_data = all_embeddings[idx2]
+        
+        # Only compute if they have different identities
+        if emb1_data['identity'] != emb2_data['identity']:
+            emb1 = emb1_data['embedding'].reshape(1, -1)
+            emb2 = emb2_data['embedding'].reshape(1, -1)
+            similarity = cosine_similarity(emb1, emb2)[0][0]
+            non_mated_similarities.append(similarity)
+            comparisons_made += 1
+    
+    if comparisons_made < n_comparisons:
+        print(f"Warning: Only generated {comparisons_made} non-mated comparisons out of {n_comparisons} requested")
+    
+    return non_mated_similarities
+
+def plot_similarity_distributions(mated_sims, non_mated_sims, n_comparisons, filename):
+    
+    # Check if we have data to plot
+    if len(mated_sims) == 0:
+        print("Warning: No mated similarities to plot!")
+        return None
+    if len(non_mated_sims) == 0:
+        print("Warning: No non-mated similarities to plot!")
+        return None
     
     # Create the plot
     plt.figure(figsize=(12, 7))
-    sns.kdeplot(best_similarities, fill=True, alpha=0.7, color='skyblue')
-    plt.title(f"Distribution of Best Match Similarities\n({len(best_similarities)} samples from {Path(filename).name})")
-    plt.xlabel("Cosine Similarity (Best Match)")
+    sns.kdeplot(mated_sims, label="Mated", fill=True, alpha=0.5)
+    sns.kdeplot(non_mated_sims, label="Non-mated", fill=True, alpha=0.5)
+    plt.title(f"Cosine Similarity Distribution ({len(mated_sims)} mated, {len(non_mated_sims)} non-mated comparisons)")
+    plt.xlabel("Cosine Similarity")
     plt.ylabel("Density")
-    plt.grid(True, alpha=0.3)
+    plt.legend()
     
     # Generate output filename based on input filename
-    base_name = Path(filename).stem
-    output_filename = f"{base_name}_BestMatches_{n_comparisons}.png"
+    base_name = filename.split('.')[0]  # Remove extension
+    output_filename = f"{base_name}_MatedVsNonmated_{n_comparisons}.png"
     
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
     print(f"Plot saved as: {output_filename}")
     
-    # Display the plot
-    plt.show()
-    
     return output_filename
 
-def main():
-    parser = argparse.ArgumentParser(description='Find best matches in CASIA and plot similarity distribution')
-    parser.add_argument('input_file', help='Input JSON file with embeddings')
-    parser.add_argument('--n_comparisons', type=int, default=10000, 
-                        help='Number of samples to compare (default: 10000)')
-    parser.add_argument('--casia_file', default='CASIA.json',
-                        help='CASIA reference file (default: CASIA.json)')
+def main(json_file_path, n_comparisons=1000):
+
+    print("Loading embeddings...")
+    identity_groups = load_embeddings(json_file_path)
     
-    args = parser.parse_args()
+    print(f"Loaded {len(identity_groups)} identities")
     
-    # Check if files exist
-    if not os.path.exists(args.input_file):
-        print(f"Error: Input file '{args.input_file}' not found!")
-        return
+    # Count total samples
+    total_samples = sum(len(embs) for embs in identity_groups.values())
+    print(f"Total samples: {total_samples}")
     
-    if not os.path.exists(args.casia_file):
-        print(f"Error: CASIA file '{args.casia_file}' not found!")
-        return
+    print(f"Computing {n_comparisons} mated similarities...")
+    mated_similarities = compute_limited_mated_similarities(identity_groups, n_comparisons)
     
-    print(f"Loading embeddings from {args.input_file}...")
-    input_embeddings, input_identities, input_names = load_embeddings(args.input_file)
-    print(f"Loaded {len(input_embeddings)} input embeddings")
+    print(f"Computing {n_comparisons} non-mated similarities...")
+    non_mated_similarities = compute_limited_non_mated_similarities(identity_groups, n_comparisons)
     
-    print(f"Loading embeddings from {args.casia_file}...")
-    casia_embeddings, casia_identities, casia_names = load_embeddings(args.casia_file)
-    print(f"Loaded {len(casia_embeddings)} CASIA embeddings")
+    print(f"Generated {len(mated_similarities)} mated comparisons")
+    print(f"Generated {len(non_mated_similarities)} non-mated comparisons")
     
-    # Find best matches
-    best_similarities = find_best_matches(input_embeddings, casia_embeddings, args.n_comparisons)
+    # Check if we have enough data
+    if len(mated_similarities) == 0:
+        print("Error: No mated similarities found. Check if identities have multiple samples.")
+        return None, None, identity_groups
     
-    # Create and display plot
-    output_file = create_similarity_plot(best_similarities, args.input_file, args.n_comparisons)
+    if len(non_mated_similarities) == 0:
+        print("Error: No non-mated similarities found. Check if you have multiple identities.")
+        return None, None, identity_groups
     
-    print(f"\nProcessing complete for {args.input_file}")
+    # Create visualization
+    print("Creating visualization...")
+    filename = os.path.basename(json_file_path)
+    filename = os.path.join("Figures", filename)
+    
+    # Create Figures directory if it doesn't exist
+    os.makedirs("Figures", exist_ok=True)
+    
+    plot_similarity_distributions(mated_similarities, non_mated_similarities, n_comparisons, filename)
+    
+    return mated_similarities, non_mated_similarities, identity_groups
 
 if __name__ == "__main__":
-    # Set random seed for reproducibility
-    random.seed(42)
-    np.random.seed(42)
-    main()
+    parser = argparse.ArgumentParser(description="Compute mated and non-mated similarity scores.")
+    parser.add_argument("json_file_path", type=str, help="Path to the input JSON file.")
+    parser.add_argument("--n_comparisons", type=int, default=10000, help="Number of comparisons to compute (default: 10000)")
+    args = parser.parse_args()
+
+    mated_sims, non_mated_sims, groups = main(
+        args.json_file_path,
+        n_comparisons=args.n_comparisons
+    )
