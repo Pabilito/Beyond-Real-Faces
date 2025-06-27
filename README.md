@@ -1,17 +1,24 @@
-# Replication studies:
+# Synthetic facial recognition datasets evaluation replication package
+
+The list of packages installed in the conda environment used in the study can be found in *environment.yml*
+
+Replace subsequent appropriate placeholder parameter values (IN UPPERCASE) with actual values.
+
+Store your dataset in ./Dataset. Due to size constraints, we do not provide the datasets and the pretrained weights (to be stored as ./Models/ArcFace_R100_MS1MV3.pth). The model can be found here https://github.com/deepinsight/insightface/tree/master/model_zoo. If you decide to choose a different model, adjust the *Embedding_Computation/analyze_embeddings.py* accordingly.
 
 ## Embedding_Computation - Compute embeddings for a dataset
 ```bash
-python analyze_embeddings.py INPUT.json --n_comparisons 10000
+python analyze_embeddings.py
 ```
-Output: JSON file with embeddings.
+*Output*: JSON file with embeddings.
 
 ## Mated_vs_non-mated - Compare mated and non-mated distributions of a dataset.
-Use previously generated JSON files to compute distributions.
+
+Use previously generated JSON files to compute distributions:
 ```bash
 python analyze_embeddings.py INPUT.json --n_comparisons 10000
 ```
-Output:
+*Output*:
 ![Vec2Face_MatedVsNonmated_1000000](https://github.com/user-attachments/assets/9eb631f9-2528-4a47-b8e8-a7a636c5041d)
 
 ## CASIA_compare - Check how closely related a dataset is with respect to CASIA-WebFace.
@@ -19,24 +26,24 @@ Find the best matches in CASIA and plot the similarity distribution based on two
 ```bash
 python compare_embeddings.py INPUT.json --n_comparisons 10000 --casia_file CASIA.json
 ```
-Output:
+*Output*:
 ![Vec2Face_BestMatches_10000](https://github.com/user-attachments/assets/4f6ca291-473e-4e13-8421-c81a3fce2941)
              
 Alternatively, find the closest samples with respect to the CASIA datasets, use:
 ```bash
 ./find_closest.sh
 ```
-Output: JSON file with the list of the closest samples.
+*Output*: JSON file with the list of the closest samples.
 
 Then save the paths in a simplified CSV file:
 ```bash
 ./get_paths.sh 
 ```
-Output: SIMILAR_IMAGES.csv
+*Output*: SIMILAR_IMAGES.csv
 
 To plot the results, use:
 ```bash
 python plot_similar.py SIMILAR_IMAGES.csv --casia-file CASIA.zip --other-file OTHER.zip --samples 5
 ```
-Output:
+*Output*:
 *TBD*
