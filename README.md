@@ -1,0 +1,42 @@
+# Replication studies:
+
+## Embedding_Computation - Compute embeddings for a dataset
+```bash
+python analyze_embeddings.py INPUT.json --n_comparisons 10000
+```
+Output: JSON file with embeddings.
+
+## Mated_vs_non-mated - Compare mated and non-mated distributions of a dataset.
+Use previously generated JSON files to compute distributions.
+```bash
+python analyze_embeddings.py INPUT.json --n_comparisons 10000
+```
+Output:
+![Vec2Face_MatedVsNonmated_1000000](https://github.com/user-attachments/assets/9eb631f9-2528-4a47-b8e8-a7a636c5041d)
+
+## CASIA_compare - Check how closely related a dataset is with respect to CASIA-WebFace.
+Find the best matches in CASIA and plot the similarity distribution based on two JSON input files.
+```bash
+python compare_embeddings.py INPUT.json --n_comparisons 10000 --casia_file CASIA.json
+```
+Output:
+![Vec2Face_BestMatches_10000](https://github.com/user-attachments/assets/4f6ca291-473e-4e13-8421-c81a3fce2941)
+             
+Alternatively, find the closest samples with respect to the CASIA datasets, use:
+```bash
+./find_closest.sh
+```
+Output: JSON file with the list of the closest samples.
+
+Then save the paths in a simplified CSV file:
+```bash
+./get_paths.sh 
+```
+Output: SIMILAR_IMAGES.csv
+
+To plot the results, use:
+```bash
+python plot_similar.py SIMILAR_IMAGES.csv --casia-file CASIA.zip --other-file OTHER.zip --samples 5
+```
+Output:
+*TBD*
