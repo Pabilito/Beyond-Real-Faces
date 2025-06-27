@@ -9,6 +9,7 @@ from pathlib import Path
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import numpy as np
 
 def extract_archive(archive_path, extract_to):
     """Extract zip or tar.gz archive to specified directory."""
@@ -77,18 +78,34 @@ def load_and_resize_image(image_path, max_size=(300, 300)):
             
             # Resize while maintaining aspect ratio
             img.thumbnail(max_size, Image.Resampling.LANCZOS)
-            return img
+            
+            # Convert to numpy array to ensure proper dtype
+            import numpy as np
+            img_array = np.array(img)
+            
+            # Ensure the array is in the correct format for matplotlib
+            if img_array.dtype != np.uint8:
+                img_array = img_array.astype(np.uint8)
+            
+            return img_array
     except Exception as e:
         print(f"Error loading image {image_path}: {e}")
         return None
+
+def get_folder_and_filename(file_path):
+    """Extract folder name and filename from path."""
+    path_parts = file_path.replace('\\', '/').split('/')
+    if len(path_parts) >= 2:
+        return f"{path_parts[-2]}/{path_parts[-1]}"
+    else:
+        return path_parts[-1]
 
 def create_multi_comparison_figure(samples_data, output_path):
     """Create a single figure with multiple image comparisons in a grid layout."""
     n_samples = len(samples_data)
     
-    # Create figure with grid layout: 3 rows per sample (casia, other, similarity), n_samples columns
-    fig, axes = plt.subplots(3, n_samples, figsize=(4 * n_samples, 12))
-    fig.suptitle('Image Similarity Comparisons', fontsize=20, fontweight='bold', y=0.95)
+    # Create figure with grid layout: 2 rows per sample (casia, other), n_samples columns
+    fig, axes = plt.subplots(2, n_samples, figsize=(4 * n_samples, 8))
     
     # Handle single sample case
     if n_samples == 1:
@@ -96,32 +113,50 @@ def create_multi_comparison_figure(samples_data, output_path):
     
     for col, (casia_img, other_img, similarity_score, query_path, casia_path) in enumerate(samples_data):
         # CASIA image (top row)
-        if casia_img:
+        if casia_img is not None:
             axes[0, col].imshow(casia_img)
         else:
-            axes[0, col].text(0.5, 0.5, 'CASIA Image\nNot Found', ha='center', va='center', 
+            axes[0, col].text(0.5, 0.5, 'Image\nNot Found', ha='center', va='center', 
                             transform=axes[0, col].transAxes, fontsize=10, color='red')
-        axes[0, col].set_title(f'CASIA\n{os.path.basename(casia_path)}', fontsize=10, fontweight='bold')
+        
+        # Extract folder name as identity and filename
+        folder_filename = get_folder_and_filename(casia_path)
+        parts = folder_filename.split('/')
+        if len(parts) == 2:
+            identity, filename = parts
+        else:
+            identity = "Unknown"
+            filename = parts[0] if parts else "Unknown"
+        
+        axes[0, col].set_title(f'Identity: {identity}\nImage: {filename}', fontsize=9, fontweight='bold')
         axes[0, col].axis('off')
         
-        # Query/Other image (middle row)
-        if other_img:
+        # Query/Other image (bottom row)
+        if other_img is not None:
             axes[1, col].imshow(other_img)
         else:
-            axes[1, col].text(0.5, 0.5, 'Query Image\nNot Found', ha='center', va='center', 
+            axes[1, col].text(0.5, 0.5, 'Image\nNot Found', ha='center', va='center', 
                             transform=axes[1, col].transAxes, fontsize=10, color='red')
-        axes[1, col].set_title(f'Query\n{os.path.basename(query_path)}', fontsize=10, fontweight='bold')
+        
+        # Extract folder name as identity and filename for query
+        folder_filename_query = get_folder_and_filename(query_path)
+        parts_query = folder_filename_query.split('/')
+        if len(parts_query) == 2:
+            identity_query, filename_query = parts_query
+        else:
+            identity_query = "Unknown"
+            filename_query = parts_query[0] if parts_query else "Unknown"
+            
+        axes[1, col].set_title(f'Identity: {identity_query}\nImage: {filename_query}', fontsize=9, fontweight='bold')
         axes[1, col].axis('off')
         
-        # Similarity score (bottom row)
-        axes[2, col].text(0.5, 0.5, f'{similarity_score:.4f}', ha='center', va='center', 
-                         transform=axes[2, col].transAxes, fontsize=16, fontweight='bold',
-                         bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.8))
-        axes[2, col].set_title('Similarity Score', fontsize=10, fontweight='bold')
-        axes[2, col].axis('off')
+        # Add similarity score in the center between the two images
+        fig.text((col + 0.5) / n_samples, 0.5, f'{similarity_score:.4f}', 
+                ha='center', va='center', fontsize=16, fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.8))
     
     plt.tight_layout()
-    plt.subplots_adjust(top=0.9, hspace=0.3, wspace=0.2)
+    plt.subplots_adjust(hspace=0.4, wspace=0.2)
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
 
@@ -198,7 +233,13 @@ def main():
         
         # Create single comparison figure with all samples
         if samples_data:
-            output_filename = f"comparison_grid_{len(samples_data)}_samples.png"
+            # Extract base name from other file (without extension)
+            other_file_base = os.path.splitext(os.path.basename(args.other_file))[0]
+            # Remove .tar if it's a .tar.gz file
+            if other_file_base.endswith('.tar'):
+                other_file_base = other_file_base[:-4]
+            
+            output_filename = f"comparison_{other_file_base}_{len(samples_data)}_samples.png"
             output_path = os.path.join(args.output_dir, output_filename)
             
             create_multi_comparison_figure(samples_data, output_path)
