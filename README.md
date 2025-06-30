@@ -8,7 +8,7 @@ Store your dataset in ./Dataset. Due to size constraints, we do not provide the 
 
 ## Embedding_Computation - Compute embeddings for a dataset
 ```bash
-python compute_embeddings.py
+python compute_embeddings_to_json.py
 ```
 *Output*: JSON file with embeddings.
 

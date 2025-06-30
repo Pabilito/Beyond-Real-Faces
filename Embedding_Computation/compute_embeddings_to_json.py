@@ -17,7 +17,7 @@ MODEL_NAME = "ArcFace_R100_MS1MV3.pth"
 weights = os.path.join(FOLDER_PATH, MODEL_NAME)
 
 # Dataset configuration
-DATASET_PATH = "Dataset"
+DATASET_PATH = "Dataset" 
 OUTPUT_JSON = "embeddings.json"
 
 # Load and configure model
