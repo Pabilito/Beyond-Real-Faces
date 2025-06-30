@@ -42,8 +42,10 @@ Then save the paths in a simplified CSV file:
 *Output*: SIMILAR_IMAGES.csv
 
 To plot the results, use:
+(.tar.gz should also work)
 ```bash
 python plot_similar.py SIMILAR_IMAGES.csv --casia-file CASIA.zip --other-file OTHER.zip --samples 5
 ```
 *Output*:
-*TBD*
+![comparison_IDiffFace_5_samples](https://github.com/user-attachments/assets/24315218-816c-4c1c-a506-804a9775152f)
+
