@@ -36,7 +36,13 @@ python compare_embeddings.py INPUT.json --n_comparisons 10000 --casia_file CASIA
 ```
 *Output*:
 ![Vec2Face_BestMatches_10000](https://github.com/user-attachments/assets/4f6ca291-473e-4e13-8421-c81a3fce2941)
-             
+
+Alternatively, just save the values of closest samples:
+```bash
+python compute_similarities.py INPUT.json --n_comparisons 10000 --casia_file CASIA.json
+```
+*Output*: SimilarityScores/INPUT_BestMatches_10000.txt
+
 Alternatively, find the closest samples with respect to the CASIA datasets, use:
 ```bash
 ./find_closest.sh
