@@ -21,6 +21,13 @@ python analyze_embeddings.py INPUT.json --n_comparisons 10000
 *Output*:
 ![Vec2Face_MatedVsNonmated_1000000](https://github.com/user-attachments/assets/9eb631f9-2528-4a47-b8e8-a7a636c5041d)
 
+If you want to get more detailed metrics use:
+```bash
+python compute_similarities.py INPUT.json --n_comparisons 10000
+python analyze_embeddings_with_metrics.py
+```
+*Output*:
+
 ## CASIA_compare - Check how closely related a dataset is with respect to CASIA-WebFace.
 Find the best matches in CASIA and plot the similarity distribution based on two JSON input files.
 ```bash
