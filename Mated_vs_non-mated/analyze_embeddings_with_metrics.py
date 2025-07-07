@@ -39,7 +39,7 @@ for mated_file in mated_files:
     non_mated_sims = load_scores(non_mated_path)
 
     # Compute stats
-    stats = get_eer_stats(non_mated_sims, mated_sims, hformat=False, ds_scores=True)
+    stats = get_eer_stats(mated_sims, non_mated_sims, hformat=False, ds_scores=False)
 
     # Print to console
     print(f"\nDataset: {base_name}")
