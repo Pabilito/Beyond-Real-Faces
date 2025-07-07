@@ -27,6 +27,7 @@ python compute_similarities.py INPUT.json --n_comparisons 10000
 python analyze_embeddings_with_metrics.py
 ```
 *Output*:
+![CemiFace_MatedVsNonmated_2000000](https://github.com/user-attachments/assets/67b19f7d-db34-4458-a9ca-e0a8b8e1850f)
 
 ## CASIA_compare - Check how closely related a dataset is with respect to CASIA-WebFace.
 Find the best matches in CASIA and plot the similarity distribution based on two JSON input files.
