@@ -63,18 +63,14 @@ def create_similarity_plot(best_similarities, filename, n_comparisons):
     
     # Create the plot
     plt.figure(figsize=(12, 7))
-    sns.histplot(best_similarities, bins=50, kde=True, alpha=0.7, color='skyblue', edgecolor='black')
+    sns.kdeplot(best_similarities, fill=True, alpha=0.7, color='skyblue')
     plt.title(f"Distribution of Best Match Similarities\n({len(best_similarities)} samples from {Path(filename).name})")
     plt.xlabel("Cosine Similarity (Best Match)")
-    plt.ylabel("Frequency")
+    plt.ylabel("Density")
     plt.grid(True, alpha=0.3)
     
-    # Add some statistics to the plot
-    mean_sim = np.mean(best_similarities)
-    std_sim = np.std(best_similarities)
-    plt.axvline(mean_sim, color='red', linestyle='--', alpha=0.8, 
-                label=f'Mean: {mean_sim:.3f} ± {std_sim:.3f}')
-    plt.legend()
+    # Set x-axis limits to 0-1 range
+    plt.xlim(0, 1)
     
     # Generate output filename based on input filename
     base_name = Path(filename).stem
@@ -82,6 +78,9 @@ def create_similarity_plot(best_similarities, filename, n_comparisons):
     
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
     print(f"Plot saved as: {output_filename}")
+    
+    # Display the plot
+    plt.show()
     
     return output_filename
 

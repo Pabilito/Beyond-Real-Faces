@@ -7,6 +7,9 @@ Figures/*
 HSFaces/*
 Qdrant/*
 Embedding_Computation/NOT_GIT/*
+Similarities/*
+Metrics/*
+Figures_with_metrics/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
