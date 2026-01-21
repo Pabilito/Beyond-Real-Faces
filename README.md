@@ -1,9 +1,9 @@
-# *Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performance without Privacy Compromise* <br/> [Replication Package] 
+# *Beyond Real Faces*
 
 [![arXiv](https://img.shields.io/badge/arXiv-2510.17372-b31b1b.svg)](https://arxiv.org/abs/2510.17372)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
-This repository contains the replication package for **"Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performance without Privacy Compromise"**. This package enables researchers to evaluate synthetic facial recognition datasets by computing embeddings, analyzing distribution characteristics, and comparing against the CASIA-WebFace benchmark.
+This repository contains the replication package for **"Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performance without Privacy Compromise"**. 
 
 ## Table of Contents
 - [Overview](#overview)
