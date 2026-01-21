@@ -1,4 +1,4 @@
-# Replication Package: Beyond Real Faces
+# *Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performance without Privacy Compromise* <br/> [Replication Package] 
 
 [![arXiv](https://img.shields.io/badge/arXiv-2510.17372-b31b1b.svg)](https://arxiv.org/abs/2510.17372)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
