@@ -10,8 +10,8 @@ This repository contains the replication package for **"Beyond Real Faces: Synth
 - [Installation](#installation)
 - [Usage](#usage)
   - [1. Computing Embeddings](#1-computing-embeddings)
-  - [2. Mated vs Non-Mated Analysis](#2-mated-vs-non-mated-analysis)
-  - [3. CASIA Comparison](#3-casia-comparison)
+  - [2. Inter- and Intra-Class Variability](#2-inter--and-intra-class-variability)
+  - [3. Identity Leakage](#3-identity-leakage)
 - [Data](#data)
 - [Citation](#citation)
 
@@ -62,7 +62,7 @@ python compute_embeddings_to_json.py
 
 ---
 
-### 2. Mated vs Non-Mated Analysis
+### 2. Inter- and intra-class variability
 
 Analyze the distribution of similarity scores between images of the same identity (mated) versus different identities (non-mated).
 
@@ -79,7 +79,7 @@ python analyze_embeddings.py INPUT.json --n_comparisons 10000
 
 **Output:** Histogram showing mated and non-mated similarity distributions
 
-![Vec2Face_MatedVsNonmated_1000000](https://github.com/user-attachments/assets/9eb631f9-2528-4a47-b8e8-a7a636c5041d)
+<img width="472" height="296" alt="image" src=https://github.com/user-attachments/assets/9eb631f9-2528-4a47-b8e8-a7a636c5041d />
 
 #### Detailed Metrics
 
@@ -92,11 +92,11 @@ python analyze_embeddings_with_metrics.py
 
 **Output:** Enhanced distribution plot with performance metrics
 
-![CemiFace_MatedVsNonmated_2000000](https://github.com/user-attachments/assets/67b19f7d-db34-4458-a9ca-e0a8b8e1850f)
+<img width="472" height="296" alt="image" src="https://github.com/user-attachments/assets/1412568d-427a-4279-83b4-2222a461bb6b" />
 
 ---
 
-### 3. CASIA Comparison
+### 3. Identity Leakage
 
 Evaluate potential identity leakage by comparing your synthetic dataset against the real-world CASIA-WebFace dataset.
 
@@ -116,7 +116,7 @@ python compare_embeddings.py INPUT.json --n_comparisons 10000 --casia_file CASIA
 
 **Output:** Distribution of best-match similarity scores
 
-![Vec2Face_BestMatches_10000](https://github.com/user-attachments/assets/4f6ca291-473e-4e13-8421-c81a3fce2941)
+<img width="472" height="293" alt="image" src="https://github.com/user-attachments/assets/df092a39-1bdc-4583-86fd-4252f56d962f" />
 
 #### Option B: Save Similarity Scores
 
@@ -153,8 +153,7 @@ python plot_similar.py SIMILAR_IMAGES.csv --casia-file CASIA.zip --other-file OT
 - `--samples`: Number of closest pairs to visualize
 
 **Output:** Grid visualization comparing synthetic faces with their closest CASIA matches
-
-![comparison_IDiffFace_5_samples](https://github.com/user-attachments/assets/24315218-816c-4c1c-a506-804a9775152f)
+<img width="2939" height="1194" alt="comparison_IDnet_GeneratedImages_5_samples" src="https://github.com/user-attachments/assets/afe8068d-6199-4e7f-b35e-7ce3fb3d4d2f" />
 
 ## Data
 
