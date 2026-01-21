@@ -8,6 +8,8 @@ import random
 import os
 from pathlib import Path
 
+FONTSIZE = 30
+
 def load_embeddings(json_file):
     """Load embeddings from JSON file line by line"""
     embeddings = []
@@ -63,10 +65,10 @@ def create_similarity_plot(best_similarities, filename, n_comparisons):
     
     # Create the plot
     plt.figure(figsize=(12, 7))
-    sns.kdeplot(best_similarities, fill=True, alpha=0.7, color='skyblue')
-    plt.title(f"Distribution of Best Match Similarities\n({len(best_similarities)} samples from {Path(filename).name})")
-    plt.xlabel("Cosine Similarity (Best Match)")
-    plt.ylabel("Density")
+    ax = sns.kdeplot(best_similarities, fill=True, alpha=0.7, color='skyblue')
+    #plt.title(f"Distribution of Best Match Similarities\n({len(best_similarities)} samples from {Path(filename).name})")
+    plt.xlabel("Cosine Similarity (Best Match)", fontsize=14)
+    plt.ylabel("Density", fontsize=14)
     plt.grid(True, alpha=0.3)
     
     # Set x-axis limits to 0-1 range
@@ -74,10 +76,17 @@ def create_similarity_plot(best_similarities, filename, n_comparisons):
     
     # Generate output filename based on input filename
     base_name = Path(filename).stem
-    output_filename = f"{base_name}_BestMatches_{n_comparisons}.png"
+    output_filename = f"{base_name}_BestMatches_{n_comparisons}.pdf"
     
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    print(f"Plot saved as: {output_filename}")
+    # Keep only left and bottom spine
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    plt.xticks(fontsize=FONTSIZE)
+    plt.yticks(fontsize=FONTSIZE)
+
+    plt.savefig(output_filename, dpi=1200, bbox_inches='tight', format="pdf")
+    print(f"Plot saved as: big_{output_filename}")
     
     # Display the plot
     plt.show()

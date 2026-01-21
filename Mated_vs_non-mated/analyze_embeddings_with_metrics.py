@@ -5,6 +5,8 @@ import seaborn as sns
 import pandas as pd
 from pyeer.eer_info import get_eer_stats
 
+FONTSIZE =30 
+
 # Load similarity scores
 def load_scores(filename):
     with open(filename, 'r') as f:
@@ -22,11 +24,11 @@ all_files = os.listdir(scores_dir)
 all_metrics = []
 
 # Find mated files
-mated_files = [f for f in all_files if f.endswith("_mated_similarities.txt")]
+non_mated_files = [f for f in all_files if f.endswith("non_mated_similarities.txt")]
 
-for mated_file in mated_files:
-    base_name = mated_file.replace("_mated_similarities.txt", "")
-    non_mated_file = f"{base_name}_non_mated_similarities.txt"
+for non_mated_file in non_mated_files:
+    base_name = non_mated_file.replace("_non_mated_similarities.txt", "")
+    mated_file = f"{base_name}_mated_similarities.txt"
 
     if non_mated_file not in all_files:
         print(f"Warning: Missing non-mated file for {base_name}, skipping...")
@@ -68,29 +70,38 @@ for mated_file in mated_files:
 
     # Plot KDE
     plt.figure(figsize=(12, 7))
-    sns.kdeplot(mated_sims, label="Mated (Genuine)", fill=True, alpha=0.5)
+    ax = sns.kdeplot(mated_sims, label="Mated (Genuine)", fill=True, alpha=0.5)
     sns.kdeplot(non_mated_sims, label="Non-mated (Impostor)", fill=True, alpha=0.5)
 
     # Threshold lines
-    plt.axvline(stats.eer_th, color='red', linestyle='-', linewidth=2, label="EER")
-    plt.axvline(stats.fmr100_th, color='green', linestyle='--', linewidth=2, label="FMR100")
-    plt.axvline(stats.fmr1000_th, color='blue', linestyle=':', linewidth=2, label="FMR1000")
+    plt.axvline(stats.eer_th, color='red', linestyle='-', linewidth=2, label="EER threshold")
+    plt.axvline(stats.fmr100_th, color='green', linestyle='--', linewidth=2, label="FMR100 threshold")
+    plt.axvline(stats.fmr1000_th, color='blue', linestyle=':', linewidth=2, label="FMR1000 threshold")
 
     # Labels and range
     plt.xlim(-0.5, 1)
-    plt.title(f"{base_name} - Cosine Similarity Distribution\n({len(mated_sims)} mated, {len(non_mated_sims)} non-mated)")
-    plt.xlabel("Cosine Similarity")
-    plt.ylabel("Density")
-    plt.legend()
+    #plt.title(f"{base_name} - Cosine Similarity Distribution\n({len(mated_sims)} mated, {len(non_mated_sims)} non-mated)")
+    plt.xlabel("Cosine Similarity", fontsize=FONTSIZE)
+    plt.ylabel("Density", fontsize=FONTSIZE)
+    #plt.legend(fontsize=20)
+
+    plt.xticks(fontsize=FONTSIZE)
+    plt.yticks(fontsize=FONTSIZE)
+
+    # Keep only left and bottom spine
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
     # Save figure
-    plot_path = os.path.join("Figures_with_metrics", f"{base_name}_MatedVsNonmated_{n_comparisons}.png")
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plot_path = os.path.join("Figures_with_metrics", f"big_{base_name}_MatedVsNonmated.pdf")
+    plt.savefig(plot_path, dpi=1200, bbox_inches='tight', format="pdf")
     plt.close()
     print(f"Plot saved to: {plot_path}")
 
+'''
 # Save all metrics to a master CSV
 master_df = pd.DataFrame(all_metrics)
 master_csv_path = os.path.join("Metrics", "All_Datasets_metrics.csv")
 master_df.to_csv(master_csv_path, index=False)
 print(f"\nMaster metrics file saved to: {master_csv_path}")
+'''

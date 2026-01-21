@@ -131,4 +131,3 @@ dependencies:
       - validators==0.34.0
       - wcwidth==0.2.13
       - widgetsnbextension==4.0.13
-prefix: /home/pawel/miniconda3/envs/python3_11_9

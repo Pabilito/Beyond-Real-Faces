@@ -8,8 +8,10 @@ HSFaces/*
 Qdrant/*
 Embedding_Computation/NOT_GIT/*
 SimilarityScores/*
-Metrics/*
 Figures_with_metrics/*
+CASIA_Compare/Results/*
+CASIA_Compare/faiss-embeddings.py
+Mated_vs_non-mated/custom_analyze.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
