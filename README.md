@@ -157,7 +157,7 @@ python plot_similar.py SIMILAR_IMAGES.csv --casia-file CASIA.zip --other-file OT
 
 ## Data
 
-Pre-computed similarity metrics and closest sample analyses are available in the `./Metrics/` folder.
+Pre-computed similarity metrics and closest sample analyses are available in the `./Data/` folder.
 
 ## Citation
 
