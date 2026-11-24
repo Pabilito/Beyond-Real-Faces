@@ -1,12 +1,4 @@
-# *Beyond Real Faces*
-
-[![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs44387--026--00115--0-blue)](https://doi.org/10.1038/s44387-026-00115-0)
-[![arXiv](https://img.shields.io/badge/arXiv-2510.17372-b31b1b.svg)](https://arxiv.org/abs/2510.17372)
-[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
-
-Paper: https://www.nature.com/articles/s44387-026-00115-0
-
-This repository contains the replication package for **"Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performance without Privacy Compromise"**. 
+# Replication package for *Beyond Real Faces: Synthetic Datasets Can Achieve Reliable Recognition Performance without Privacy Compromise*  [![Paper](https://img.shields.io/badge/npj%20Artificial%20Intelligence-2026-0070a8.svg)](https://www.nature.com/articles/s44387-026-00115-0)
 
 ## Table of Contents
 - [Overview](#overview)
@@ -167,12 +159,23 @@ Pre-computed similarity metrics and closest sample analyses are available in the
 If you use this replication package, please cite:
 
 ```bibtex
-@article{borsukiewicz2026beyond,
-  title={Beyond real faces: synthetic datasets can achieve reliable recognition performance without privacy compromise},
-  author={Borsukiewicz, Pawe{\l} and Boutros, Fadi and Olatunji, Iyiola E and Beumier, Charles and Ou{\'e}draogo, Wendk{\^u}uni C and Klein, Jacques and Bissyand{\'e}, Tegawend{\'e} F},
-  journal={npj Artificial Intelligence},
-  year={2026},
-  publisher={Nature Publishing Group}
+@Article{Borsukiewicz2026,
+author={Borsukiewicz, Pawe{\l}
+and Boutros, Fadi
+and Olatunji, Iyiola E.
+and Beumier, Charles
+and Ou{\'e}draogo, Wendk{\^u}uni C.
+and Klein, Jacques
+and Bissyand{\'e}, Tegawend{\'e} F.},
+title={Beyond real faces: synthetic datasets can achieve reliable recognition performance without privacy compromise},
+journal={npj Artificial Intelligence},
+year={2026},
+volume={2},
+number={1},
+pages={83},
+issn={3005-1460},
+doi={10.1038/s44387-026-00115-0},
+url={https://doi.org/10.1038/s44387-026-00115-0}
 }
 ```
 
